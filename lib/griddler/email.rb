@@ -25,31 +25,31 @@ module Griddler
     def initialize(params)
       @params = params
 
-      @to = recipients(:to)
-      @from = extract_address(params[:from])
+      @to = recipients('to')
+      @from = extract_address(params['from'])
       @subject = extract_subject
 
       @body = extract_body
-      @raw_text = params[:text]
-      @raw_html = params[:html]
+      @raw_text = params['text']
+      @raw_html = params['html']
       @raw_body = @raw_text.presence || @raw_html
 
       @headers = extract_headers
 
-      @cc = recipients(:cc)
-      @bcc = recipients(:bcc)
-      @original_recipient = extract_address(params[:original_recipient])
-      @reply_to = extract_address(params[:reply_to])
+      @cc = recipients('cc')
+      @bcc = recipients('bcc')
+      @original_recipient = extract_address(params['original_recipient'])
+      @reply_to = extract_address(params['reply_to'])
 
-      @raw_headers = params[:headers]
+      @raw_headers = params['headers']
 
-      @attachments = params[:attachments]
+      @attachments = params['attachments']
 
       @vendor_specific = params.fetch(:vendor_specific, {})
 
-      @spam_report = params[:spam_report]
+      @spam_report = params['spam_report']
 
-      @charsets = params[:charsets]
+      @charsets = params['charsets']
     end
 
     def to_h
@@ -77,18 +77,33 @@ module Griddler
       @spam_report[:score] if @spam_report
     end
 
-    private
+#    private
 
-    attr_reader :params
+#    attr_reader :params
 
     def config
       @config ||= Griddler.configuration
     end
 
     def recipients(type)
-      params[type].to_a.reject(&:empty?).map do |recipient|
-        extract_address(recipient)
-      end.compact
+      puts type
+      puts @params[type]
+     data = [] 
+     if @params[type] && @params[type].is_a?(String)
+       data = @params[type].lines.to_a
+     end     
+
+     if @params[type] && @params[type].is_a?(Array)
+       data = @params[type]
+     end 
+ 
+     #if @params[type]
+        data.reject(&:empty?).map do |recipient|
+          extract_address(recipient)
+        end.compact
+     # else 
+      #  []
+      #end
     end
 
     def extract_address(address)
@@ -97,7 +112,7 @@ module Griddler
     end
 
     def extract_subject
-      clean_text(params[:subject])
+      clean_text(@params[:subject])
     end
 
     def extract_body
@@ -105,12 +120,12 @@ module Griddler
     end
 
     def extract_headers
-      if params[:headers].is_a?(Hash)
-        deep_clean_invalid_utf8_bytes(params[:headers])
-      elsif params[:headers].is_a?(Array)
-        deep_clean_invalid_utf8_bytes(params[:headers])
+      if @params['headers'].is_a?(Hash)
+        deep_clean_invalid_utf8_bytes(@params['headers'])
+      elsif @params['headers'].is_a?(Array)
+        deep_clean_invalid_utf8_bytes(@params['headers'])
       else
-        EmailParser.extract_headers(clean_invalid_utf8_bytes(params[:headers]))
+        EmailParser.extract_headers(clean_invalid_utf8_bytes(@params['headers']))
       end
     end
 
@@ -119,8 +134,8 @@ module Griddler
     end
 
     def text_or_sanitized_html
-      text = clean_text(params.fetch(:text, ''))
-      text.presence || clean_html(params.fetch(:html, '')).presence
+      text = clean_text(@params.fetch(:text, ''))
+      text.presence || clean_html(@params.fetch(:html, '')).presence
     end
 
     def clean_text(text)
