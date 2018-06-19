@@ -77,17 +77,11 @@ module Griddler
       @spam_report[:score] if @spam_report
     end
 
-#    private
-
-#    attr_reader :params
-
     def config
       @config ||= Griddler.configuration
     end
 
     def recipients(type)
-      puts type
-      puts @params[type]
      data = [] 
      if @params[type] && @params[type].is_a?(String)
        data = @params[type].lines.to_a
@@ -96,14 +90,10 @@ module Griddler
      if @params[type] && @params[type].is_a?(Array)
        data = @params[type]
      end 
- 
-     #if @params[type]
-        data.reject(&:empty?).map do |recipient|
-          extract_address(recipient)
-        end.compact
-     # else 
-      #  []
-      #end
+
+     data.reject(&:empty?).map do |recipient|
+       extract_address(recipient)
+     end.compact
     end
 
     def extract_address(address)
